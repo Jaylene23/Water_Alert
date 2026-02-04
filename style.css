@@ -44,3 +44,29 @@
 .nav-link:hover {
     color: #f0a500;
 }
+#searchInput {
+    width: 200px;
+    padding: 6px 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#searchResults {
+    border: 1px solid #ccc;
+    max-width: 200px;
+    border-radius: 4px;
+    margin-top: 2px;
+    background-color: white;
+    position: absolute;
+    z-index: 1000;
+}
+
+.search-item {
+    padding: 6px 10px;
+    cursor: pointer;
+}
+
+.search-item:hover {
+    background-color: #f0f0f0;
+}
