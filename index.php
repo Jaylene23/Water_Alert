@@ -1,243 +1,139 @@
 <?php
 include 'config.php';
-if(!isset($_SESSION['user'])){
-    header("Location: login.php");
-    exit;
-}
+requireRole('user');
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Water Tank Leak Alert System</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WaterGuard — User Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-/* Keep all previous styles from your last code */
-:root {
-    --primary: #2c3e50;
-    --accent: #3498db;
-    --danger: #e74c3c;
-    --success: #27ae60;
-    --warning: #f39c12;
-    --bg: #f4f7f6;
-    --card-bg: #ffffff;
-}
-body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin:0; padding:0; color:#333; }
-header { background: var(--primary); color:white; padding:15px 20px; box-shadow:0 2px 5px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center; }
-.tank-info h1 { margin:0; font-size:1.2rem; font-weight:600; }
-.tank-info p { margin:0; font-size:0.85rem; opacity:0.8; }
-.header-status { font-size:0.8rem; background: rgba(255,255,255,0.2); padding:5px 10px; border-radius:15px; }
-.container { max-width: 1200px; margin:20px auto; padding:0 15px; display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px; }
-.card { background: var(--card-bg); padding:20px; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.05); transition:transform 0.2s; }
-.card:hover { transform: translateY(-2px); }
-.card h3 { margin-top:0; color: var(--primary); border-bottom:2px solid #eee; padding-bottom:10px; font-size:1.1rem; }
-.status-card { text-align:center; padding:20px; border-radius:10px; margin-bottom:0; transition: all 0.3s ease; border:2px solid transparent; }
-.status-safe { background:#d4edda; color:#155724; border-color:#c3e6cb; }
-.status-danger { background:#f8d7da; color:#721c24; border-color:#f5c6cb; animation:pulse 1s infinite; }
-@keyframes pulse { 0% { transform:scale(1); } 50% { transform:scale(1.02); } 100% { transform:scale(1); } }
-.level-container { margin-top:15px; }
-.level-label { display:flex; justify-content:space-between; font-size:0.9rem; font-weight:bold; }
-.progress-bar { height:20px; background:#e0e0e0; border-radius:10px; overflow:hidden; margin-top:5px; }
-.progress-fill { height:100%; background:var(--accent); width:75%; transition:width 0.5s ease,background 0.5s; }
-.progress-fill.low { background: var(--warning); }
-.progress-fill.critical { background: var(--danger); }
-.control-group { display:flex; flex-direction:column; gap:10px; }
-button { padding:12px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; font-size:0.95rem; transition:opacity 0.2s; }
-button:hover { opacity:0.9; }
-.btn-leak { background: var(--danger); color:white; }
-.btn-safe { background: var(--success); color:white; }
-.btn-valve { background: var(--primary); color:white; }
-.btn-valve.closed { background:#555; cursor:not-allowed; }
-.health-item { display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.9rem; }
-.health-value { font-weight:bold; }
-.health-ok { color: var(--success); }
-.health-warn { color: var(--warning); }
-.table-responsive { overflow-x:auto; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.05); }
-table { width:100%; border-collapse:collapse; min-width:500px; }
-th,td { padding:12px; text-align:left; border-bottom:1px solid #000305; }
-th { background-color: var(--primary); color:white; }
-.badge { padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; text-transform:uppercase; }
-.badge-leak { background: var(--danger); color:white; }
-.badge-safe { background: var(--success); color:white; }
-@media(max-width:768px){.container{grid-template-columns:1fr;} header{flex-direction:column;text-align:center;gap:10px;} .header-status{align-self:flex-end;} .container{margin-top:10px;} .card{padding:15px;} h1{font-size:1.1rem;}}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f0f9ff;--surface:#fff;--border:#e0f2fe;--text:#0f172a;--muted:#64748b;--accent:#3b82f6;--danger:#ef4444;--success:#22c55e;--warn:#f59e0b;}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);}
+header{background:#1e3a5f;color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;}
+.brand{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:700;}
+.brand span{color:#38bdf8;}
+.badge-role{background:rgba(59,130,246,.25);color:#bfdbfe;padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:600;}
+nav{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;gap:4px;}
+nav a{padding:12px 16px;font-size:.85rem;font-weight:600;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;}
+nav a.active{color:var(--accent);border-bottom-color:var(--accent);}
+.container{max-width:1100px;margin:24px auto;padding:0 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;}
+.card h3{font-family:'Space Grotesk',sans-serif;font-size:1rem;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.status-box{border-radius:10px;padding:20px;text-align:center;margin-bottom:12px;}
+.status-safe{background:#dcfce7;border:1.5px solid #86efac;}
+.status-leak{background:#fee2e2;border:1.5px solid #fca5a5;animation:pulse .8s infinite;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+.status-icon{font-size:2.5rem;}
+.status-text{font-family:'Space Grotesk',sans-serif;font-size:1.3rem;font-weight:700;margin-top:6px;}
+.upd{font-size:.78rem;color:var(--muted);margin-top:4px;}
+.level-row{display:flex;justify-content:space-between;font-size:.88rem;margin-bottom:6px;font-weight:600;}
+.bar-bg{background:#e2e8f0;border-radius:8px;height:14px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:8px;transition:width .5s,background .5s;}
+.hint{font-size:.75rem;color:var(--muted);margin-top:6px;}
+.notice{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 18px;font-size:.85rem;color:#1d4ed8;}
+table{width:100%;border-collapse:collapse;}
+th{background:#f1f5f9;padding:10px 12px;text-align:left;font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+td{padding:10px 12px;font-size:.84rem;border-bottom:1px solid var(--border);}
+.badge{padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;}
+.badge-safe{background:#dcfce7;color:#15803d;}
+.badge-leak{background:#fee2e2;color:#dc2626;}
+.full{grid-column:1/-1;}
 </style>
 </head>
 <body>
-
 <header>
-    <div class="tank-info">
-        <h1>🏭 Main Storage Tank</h1>
-        <p>Location: NBSC SCHOOL • Capacity: 5000 Liters</p>
-    
-    </div>
-    <div class="header-status">
-    System: <span id="headerStatus">Online</span> 
-    • <a href="logout.php" style="color:white; text-decoration:underline; font-size:0.8rem;">Logout</a>
-</div>
+  <div class="brand">💧 Water<span>Guard</span></div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <span class="badge-role">👤 <?= htmlspecialchars($_SESSION['user']) ?> — User</span>
+    <a href="logout.php" style="color:#94a3b8;font-size:.8rem;text-decoration:underline;">Logout</a>
+  </div>
 </header>
+<nav>
+  <a href="index.php" class="active">Dashboard</a>
+  <a href="history.php">History</a>
+</nav>
 
 <div class="container">
-    <!-- Status Card -->
-    <div class="card">
-        <h3>🚨 Live Status</h3>
-        <div id="statusDisplay" class="status-card status-safe">
-            <h2 id="statusText">System Normal</h2>
-            <p id="lastUpdate" style="font-size:0.85em; opacity:0.8;">Waiting for data...</p>
-        </div>
+  <div class="card">
+    <h3>🚨 Live Status</h3>
+    <div id="statusBox" class="status-box status-safe">
+      <div class="status-icon" id="statusIcon">✅</div>
+      <div class="status-text" id="statusText">System Normal</div>
+      <div class="upd" id="lastUpd">Waiting for data…</div>
     </div>
+    <div class="notice">ℹ️ You have <strong>read-only</strong> access. Contact a Manager for controls.</div>
+  </div>
 
-    <!-- Water Level Card -->
-    <div class="card">
-        <h3>💧 Water Level</h3>
-        <canvas id="waterChart" height="200"></canvas>
-        <div class="level-label">
-            <span>Current Level</span>
-            <span id="levelText">75%</span>
-        </div>
-        <div class="progress-bar">
-            <div id="levelBar" class="progress-fill" style="width:75%;"></div>
-        </div>
-        <p style="font-size:0.8rem; color:#666; margin-top:5px;">Threshold: <20% triggers alert</p>
-    </div>
+  <div class="card">
+    <h3>💧 Water Level</h3>
+    <canvas id="waterChart" height="180"></canvas>
+    <div class="level-row"><span>Current Level</span><span id="levelPct">–</span></div>
+    <div class="bar-bg"><div id="barFill" class="bar-fill" style="width:0%;background:#22c55e;"></div></div>
+    <p class="hint">⚠️ Alert triggers when level drops below 20%</p>
+  </div>
 
-    <!-- Controls Card -->
-    <div class="card">
-        <h3>🛠️ Controls</h3>
-        <div class="control-group">
-            <button class="btn-leak" onclick="simulateStatus('LEAK')">Simulate Leak 🚨</button>
-            <button class="btn-safe" onclick="simulateStatus('SAFE')">Simulate Normal ✅</button>
-            <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
-            <button id="valveBtn" class="btn-valve" onclick="toggleValve()">Close Valve (Open)</button>
-        </div>
-    </div>
-
-    <!-- Logs Table -->
-    <div class="card" style="grid-column:1/-1;">
-        <h3>📜 Recent Logs</h3>
-        <div class="table-responsive">
-            <table>
-                <thead><tr><th>ID</th><th>Status</th><th>Source</th><th>Time</th></tr></thead>
-                <tbody id="logTable"><tr><td colspan="4" style="text-align:center;">Loading...</td></tr></tbody>
-            </table>
-        </div>
-    </div>
+  <div class="card full">
+    <h3>📋 Recent Activity <span style="font-size:.75rem;font-weight:400;color:var(--muted)">(Last 10 entries)</span></h3>
+    <table>
+      <thead><tr><th>#</th><th>Status</th><th>Source</th><th>Time</th></tr></thead>
+      <tbody id="logBody"><tr><td colspan="4" style="text-align:center;color:var(--muted);">Loading…</td></tr></tbody>
+    </table>
+  </div>
 </div>
 
 <script>
-let waterChart;
-let chartLabels = [];
-let chartData = [];
+let chart, labels = [], data = [];
+function levelColor(v){ return v < 20 ? '#ef4444' : v < 50 ? '#f59e0b' : '#22c55e'; }
 
-// Map water level to color: SAFE / LOW / CRITICAL
-function getColor(value){
-    if(value < 20) return 'rgba(231,76,60,0.6)';    // RED → CRITICAL
-    if(value < 50) return 'rgba(243,156,18,0.6)';   // YELLOW → LOW
-    return 'rgba(46,204,113,0.6)';                 // GREEN → SAFE
+(function(){
+  const ctx = document.getElementById('waterChart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets: [{ label: 'Water Level (%)', data, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,.1)', fill: true, tension: .3, pointRadius: 3 }] },
+    options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } }, plugins: { legend: { display: false } } }
+  });
+})();
+
+function fetchStatus() {
+  fetch('api.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'action=get_status' })
+  .then(r => r.json()).then(d => {
+    if (!d.success) return;
+    const s = d.data;
+    const leak = parseInt(s.water_level) < 20 || s.status === 'LEAK';
+    document.getElementById('statusBox').className = 'status-box ' + (leak ? 'status-leak' : 'status-safe');
+    document.getElementById('statusIcon').textContent = leak ? '🚨' : '✅';
+    document.getElementById('statusText').textContent = leak ? 'LEAK DETECTED' : 'System Normal';
+    document.getElementById('lastUpd').textContent = 'Last updated: ' + new Date(s.last_updated).toLocaleString();
+    document.getElementById('levelPct').textContent = s.water_level + '%';
+    const bar = document.getElementById('barFill');
+    bar.style.width = s.water_level + '%';
+    bar.style.background = levelColor(parseInt(s.water_level));
+    const now = new Date().toLocaleTimeString();
+    if (labels.length > 20) { labels.shift(); data.shift(); }
+    labels.push(now); data.push(parseInt(s.water_level));
+    chart.data.datasets[0].borderColor = levelColor(parseInt(s.water_level));
+    chart.data.datasets[0].backgroundColor = levelColor(parseInt(s.water_level)) + '22';
+    chart.update();
+  });
 }
 
-// Initialize Chart.js chart
-function initChart(){
-    const ctx = document.getElementById('waterChart').getContext('2d');
-    waterChart = new Chart(ctx,{
-        type:'line',
-        data:{
-            labels: chartLabels,
-            datasets:[{
-                label:'Water Level (%)',
-                data: chartData,
-                backgroundColor: chartData.map(getColor),
-                borderColor: chartData.map(getColor),
-                fill:true,
-                tension:0.2
-            }]
-        },
-        options:{
-            responsive:true,
-            scales:{ y:{ beginAtZero:true, max:100 } }
-        }
-    });
+function fetchLogs() {
+  fetch('api.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'action=get_logs' })
+  .then(r => r.json()).then(d => {
+    if (!d.success) return;
+    document.getElementById('logBody').innerHTML = d.logs.length
+      ? d.logs.map(l => `<tr><td>${l.id}</td><td><span class="badge badge-${l.status.toLowerCase()}">${l.status}</span></td><td>${l.source}</td><td>${new Date(l.created_at).toLocaleString()}</td></tr>`).join('')
+      : '<tr><td colspan="4" style="text-align:center;color:var(--muted);">No logs yet.</td></tr>';
+  });
 }
 
-// Fetch latest tank status from API
-function fetchStatus(){
-    fetch('api.php',{
-        method:'POST',
-        headers:{'Content-Type':'application/x-www-form-urlencoded'},
-        body:'action=get_status'
-    }).then(r=>r.json()).then(d=>{
-        if(d.success){
-            const s = d.data;
-
-            // Update status card
-            document.getElementById('statusText').innerText = s.status;
-            document.getElementById('lastUpdate').innerText = new Date(s.last_updated).toLocaleString();
-            document.getElementById('levelText').innerText = s.water_level+'%';
-            document.getElementById('levelBar').style.width = s.water_level+'%';
-
-            const card = document.getElementById('statusDisplay');
-            card.className = 'status-card '+(s.water_level<20?'status-danger':'status-safe');
-
-            document.getElementById('valveBtn').innerText = (s.valve_state=='OPEN'?'Close Valve (Open)':'Open Valve (Closed)');
-
-            // Update Chart dynamically
-            const now = new Date().toLocaleTimeString();
-            if(chartLabels.length>20){ chartLabels.shift(); chartData.shift(); }
-            chartLabels.push(now);
-            chartData.push(s.water_level);
-
-            waterChart.data.datasets[0].data = chartData;
-            waterChart.data.datasets[0].backgroundColor = chartData.map(getColor);
-            waterChart.data.datasets[0].borderColor = chartData.map(getColor);
-            waterChart.update();
-        }
-    });
-}
-
-// Fetch recent logs
-function fetchLogs(){
-    fetch('api.php',{
-        method:'POST',
-        headers:{'Content-Type':'application/x-www-form-urlencoded'},
-        body:'action=get_logs'
-    }).then(r=>r.json()).then(d=>{
-        if(d.success){
-            const tbody = document.getElementById('logTable');
-            tbody.innerHTML='';
-            d.logs.forEach(l=>{
-                tbody.innerHTML+=`<tr>
-                    <td>${l.id}</td>
-                    <td>${l.status}</td>
-                    <td>${l.source}</td>
-                    <td>${new Date(l.created_at).toLocaleString()}</td>
-                </tr>`;
-            });
-        }
-    });
-}
-
-// Simulate leak or safe status
-function simulateStatus(type){
-    fetch('api.php',{
-        method:'POST',
-        headers:{'Content-Type':'application/x-www-form-urlencoded'},
-        body:'action=simulate_leak&status='+type
-    }).then(()=>{ fetchStatus(); fetchLogs(); });
-}
-
-// Toggle valve open/close
-function toggleValve(){
-    const current = document.getElementById('valveBtn').innerText.includes('Open')?'OPEN':'CLOSED';
-    fetch('api.php',{
-        method:'POST',
-        headers:{'Content-Type':'application/x-www-form-urlencoded'},
-        body:'action=toggle_valve&current_state='+current
-    }).then(()=>{ fetchStatus(); });
-}
-
-// Initialize everything
-initChart();
-setInterval(()=>{ fetchStatus(); fetchLogs(); },3000);
-fetchStatus();
-fetchLogs();
+fetchStatus(); fetchLogs();
+setInterval(() => { fetchStatus(); fetchLogs(); }, 5000);
 </script>
+</body>
+</html>
