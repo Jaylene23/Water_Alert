@@ -41,12 +41,6 @@ $roles = [
     'manager' => ['label' => 'Manager', 'icon' => '🛠️', 'desc' => 'Manage & control system'],
     'admin'   => ['label' => 'Admin',   'icon' => '🔐', 'desc' => 'System administration'],
 ];
-
-// Get the correct base path
-$base_path = dirname($_SERVER['SCRIPT_NAME']);
-if ($base_path == '/' || $base_path == '\\') {
-    $base_path = '';
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -87,19 +81,16 @@ body::before {
 }
 
 .logo {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 1.6rem;
-  font-weight: 700;
-  margin-bottom: 8px;
+  text-align: center;
+  margin-bottom: 16px;
   position: relative;
   z-index: 1;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-  background: transparent;
-  color: white;
 }
 
-.logo span {
-  color: #38bdf8;
+.logo img {
+  max-width: 200px;
+  height: auto;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
 }
 
 .subtitle {
@@ -315,7 +306,9 @@ input::placeholder {
 </style>
 </head>
 <body>
-<div class="logo">💧 Water<span>Guard</span></div>
+<div class="logo">
+  <img src="WaterleakLG.png" alt="WaterGuard Logo">
+</div>
 <p class="subtitle">Select your role to sign in</p>
 
 <div class="role-grid">
