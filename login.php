@@ -8,7 +8,7 @@ if (isLoggedIn()) {
 }
 
 $error         = '';
-$selected_role = $_GET['role'] ?? $_POST['role'] ?? '';
+$selected_role = $_POST['role'] ?? 'user';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $uname = trim($_POST['username'] ?? '');
@@ -37,9 +37,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $roles = [
-    'user'    => ['label' => 'User',    'icon' => '👤', 'desc' => 'Monitor tank status'],
-    'manager' => ['label' => 'Manager', 'icon' => '🛠️', 'desc' => 'Manage & control system'],
-    'admin'   => ['label' => 'Admin',   'icon' => '🔐', 'desc' => 'System administration'],
+    'user'    => 'User',
+    'manager' => 'Manager',
+    'admin'   => 'Admin',
 ];
 ?>
 <!DOCTYPE html>
@@ -80,147 +80,47 @@ body::before {
   z-index: 0;
 }
 
-.logo {
-  text-align: center;
-  margin-bottom: 16px;
-  position: relative;
-  z-index: 1;
-}
-
-.logo img {
-  max-width: 200px;
-  height: auto;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
-}
-
-.subtitle {
-  color: rgba(255,255,255,0.95);
-  font-size: .9rem;
-  margin-bottom: 32px;
-  position: relative;
-  z-index: 1;
-  background: transparent;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-}
-
-.role-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  width: 100%;
-  max-width: 480px;
-  margin-bottom: 28px;
-  position: relative;
-  z-index: 1;
-}
-
-.role-btn {
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  padding: 16px 12px;
-  cursor: pointer;
-  text-align: center;
-  transition: all .2s;
-  text-decoration: none;
-  color: white;
-}
-
-.role-btn:hover {
-  transform: translateY(-2px);
-  background: rgba(0, 0, 0, 0.8);
-  border-color: rgba(56, 189, 248, 0.5);
-}
-
-.role-btn[data-role="user"] {
-  color: var(--user);
-}
-
-.role-btn[data-role="manager"] {
-  color: var(--manager);
-}
-
-.role-btn[data-role="admin"] {
-  color: var(--admin);
-}
-
-.role-btn.active[data-role="user"] {
-  border-color: var(--user);
-  box-shadow: 0 0 0 3px rgba(59,130,246,.3);
-}
-
-.role-btn.active[data-role="manager"] {
-  border-color: var(--manager);
-  box-shadow: 0 0 0 3px rgba(16,185,129,.3);
-}
-
-.role-btn.active[data-role="admin"] {
-  border-color: var(--admin);
-  box-shadow: 0 0 0 3px rgba(139,92,246,.3);
-}
-
-.role-icon {
-  font-size: 1.6rem;
-  display: block;
-  margin-bottom: 6px;
-}
-
-.role-label {
-  font-weight: 700;
-  font-size: .85rem;
-  display: block;
-}
-
-.role-desc {
-  font-size: .72rem;
-  color: rgba(255,255,255,0.7);
-  display: block;
-  margin-top: 2px;
-}
-
 .form-card {
   background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 16px;
-  padding: 28px;
+  padding: 32px;
   width: 100%;
-  max-width: 380px;
+  max-width: 400px;
   position: relative;
   z-index: 1;
   box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  text-align: center;
 }
 
-.form-card h3 {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 1.1rem;
-  margin-bottom: 4px;
-  color: #fff;
-}
-
-.role-tag {
-  font-size: .78rem;
-  padding: 3px 10px;
-  border-radius: 20px;
-  display: inline-block;
+.logo {
   margin-bottom: 20px;
-  font-weight: 600;
 }
 
-.tag-user {
-  background: rgba(59,130,246,.3);
-  color: var(--user);
+.logo img {
+  max-width: 80px;
+  height: auto;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
 }
 
-.tag-manager {
-  background: rgba(16,185,129,.3);
-  color: var(--manager);
+.brand {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: white;
 }
 
-.tag-admin {
-  background: rgba(139,92,246,.3);
-  color: var(--admin);
+.brand span {
+  color: #38bdf8;
+}
+
+.subtitle {
+  color: rgba(255,255,255,0.7);
+  font-size: .85rem;
+  text-align: center;
+  margin-bottom: 24px;
 }
 
 label {
@@ -229,9 +129,10 @@ label {
   color: rgba(255,255,255,0.9);
   margin-bottom: 6px;
   font-weight: 500;
+  text-align: left;
 }
 
-input {
+input, select {
   width: 100%;
   background: rgba(0, 0, 0, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -242,9 +143,15 @@ input {
   margin-bottom: 16px;
   outline: none;
   font-family: inherit;
+  cursor: pointer;
 }
 
-input:focus {
+select option {
+  background: #1e293b;
+  color: white;
+}
+
+input:focus, select:focus {
   border-color: #38bdf8;
   background: rgba(0, 0, 0, 0.8);
   box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
@@ -264,20 +171,7 @@ input::placeholder {
   cursor: pointer;
   transition: all .2s;
   font-family: inherit;
-}
-
-.btn-user {
-  background: var(--user);
-  color: #fff;
-}
-
-.btn-manager {
-  background: var(--manager);
-  color: #fff;
-}
-
-.btn-admin {
-  background: var(--admin);
+  background: #3b82f6;
   color: #fff;
 }
 
@@ -295,49 +189,38 @@ input::placeholder {
   padding: 10px 14px;
   font-size: .85rem;
   margin-bottom: 16px;
-}
-
-.no-role {
-  color: rgba(255,255,255,0.9);
   text-align: center;
-  font-size: .9rem;
-  padding: 20px 0;
 }
 </style>
 </head>
 <body>
-<div class="logo">
-  <img src="WaterleakLG.png" alt="WaterGuard Logo">
-</div>
-<p class="subtitle">Select your role to sign in</p>
-
-<div class="role-grid">
-<?php foreach ($roles as $key => $r): ?>
-  <a href="?role=<?= $key ?>" class="role-btn<?= ($selected_role === $key) ? ' active' : '' ?>" data-role="<?= $key ?>">
-    <span class="role-icon"><?= $r['icon'] ?></span>
-    <span class="role-label"><?= $r['label'] ?></span>
-    <span class="role-desc"><?= $r['desc'] ?></span>
-  </a>
-<?php endforeach; ?>
-</div>
-
-<?php if ($selected_role && isset($roles[$selected_role])):
-    $r = $roles[$selected_role]; ?>
 <div class="form-card">
-  <h3>Sign in as <?= $r['label'] ?></h3>
-  <span class="role-tag tag-<?= $selected_role ?>"><?= $r['icon'] ?> <?= $r['label'] ?></span>
+  <div class="logo">
+    <img src="WaterleakLG.png" alt="WaterGuard Logo">
+  </div>
+  <div class="brand">Water<span>Guard</span></div>
+  <p class="subtitle">Select your role to sign in</p>
+  
   <?php if ($error): ?><div class="error">⚠️ <?= htmlspecialchars($error) ?></div><?php endif; ?>
+  
   <form method="POST">
-    <input type="hidden" name="role" value="<?= $selected_role ?>">
+    <label>Role</label>
+    <select name="role" required>
+      <?php foreach ($roles as $key => $label): ?>
+        <option value="<?= $key ?>" <?= $selected_role === $key ? 'selected' : '' ?>>
+          <?= $label ?>
+        </option>
+      <?php endforeach; ?>
+    </select>
+    
     <label>Username</label>
     <input type="text" name="username" required autofocus placeholder="Enter username">
+    
     <label>Password</label>
     <input type="password" name="password" required placeholder="••••••••">
-    <button type="submit" class="btn-login btn-<?= $selected_role ?>">Sign In</button>
+    
+    <button type="submit" class="btn-login">Sign In</button>
   </form>
 </div>
-<?php else: ?>
-<div class="form-card"><p class="no-role">👆 Choose a role above to continue</p></div>
-<?php endif; ?>
 </body>
 </html>
