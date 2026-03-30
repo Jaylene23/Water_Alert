@@ -51,6 +51,14 @@ requireRole('user');
       font-family: 'Space Grotesk', sans-serif;
       font-size: 1.1rem;
       font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand img {
+      height: 32px;
+      width: auto;
     }
 
     .brand span {
@@ -243,7 +251,10 @@ requireRole('user');
 
 <body>
   <header>
-    <div class="brand">💧 Water<span>Guard</span></div>
+    <div class="brand">
+      <img src="WaterleakLG.png" alt="WaterGuard Logo">
+      Water<span>Guard</span>
+    </div>
     <div style="display:flex;align-items:center;gap:12px;">
       <span class="badge-role">👤 <?= htmlspecialchars($_SESSION['user']) ?> — User</span>
       <a href="logout.php" style="color:#94a3b8;font-size:.8rem;text-decoration:underline;">Logout</a>
