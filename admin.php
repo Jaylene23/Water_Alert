@@ -14,7 +14,8 @@ requireRole('admin');
 :root{--bg:#faf5ff;--surface:#fff;--border:#e9d5ff;--text:#0f172a;--muted:#64748b;--accent:#8b5cf6;--danger:#ef4444;--success:#22c55e;--warn:#f59e0b;--primary:#3b0764;}
 body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);}
 header{background:var(--primary);color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;}
-.brand{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:700;}
+.brand{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:10px;}
+.brand img{height:32px;width:auto;}
 .brand span{color:#c4b5fd;}
 .badge-role{background:rgba(139,92,246,.3);color:#ddd6fe;padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:600;}
 nav{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;gap:4px;}
@@ -60,7 +61,10 @@ input:focus,select:focus{border-color:var(--accent);}
 </head>
 <body>
 <header>
-  <div class="brand">💧 Water<span>Guard</span> <span style="font-size:.75rem;opacity:.6;margin-left:4px;">Admin Panel</span></div>
+  <div class="brand">
+    <img src="WaterleakLG.png" alt="WaterGuard Logo">
+    Water<span>Guard</span> <span style="font-size:.75rem;opacity:.6;margin-left:4px;">Admin Panel</span>
+  </div>
   <div style="display:flex;align-items:center;gap:12px;">
     <span class="badge-role">🔐 <?= htmlspecialchars($_SESSION['user']) ?></span>
     <a href="logout.php" style="color:#c4b5fd;font-size:.8rem;text-decoration:underline;">Logout</a>
@@ -120,7 +124,7 @@ input:focus,select:focus{border-color:var(--accent);}
   </div>
   <div class="card">
     <h3>👥 All Users</h3>
-    <table>
+     <table>
       <thead><tr><th>#</th><th>Username</th><th>Role</th><th>Created</th><th>Action</th></tr></thead>
       <tbody id="userBody"><tr><td colspan="5" style="text-align:center;color:var(--muted);">Loading…</td></tr></tbody>
     </table>
