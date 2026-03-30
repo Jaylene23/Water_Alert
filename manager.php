@@ -12,16 +12,17 @@ requireRole('manager');
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#f0fdf4;--surface:#fff;--border:#d1fae5;--text:#0f172a;--muted:#64748b;--accent:#10b981;--danger:#ef4444;--success:#22c55e;--warn:#f59e0b;--primary:#064e3b;}
+:root{--bg:#f0fdf4;--surface:#fff;--border:#d1fae5;--text:#0f172a;--muted:#64748b;--accent:#10b981;--danger:#ef4444;--success:#22c55e;--warn:#f59e0b;--primary:#1e3a5f;}
 body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);}
 header{background:var(--primary);color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;}
 .brand{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:10px;}
 .brand img{height:32px;width:auto;}
-.brand span{color:#6ee7b7;}
-.badge-role{background:rgba(16,185,129,.25);color:#a7f3d0;padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:600;}
-nav{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;gap:4px;}
-nav a{padding:12px 16px;font-size:.85rem;font-weight:600;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;}
-nav a.active{color:var(--accent);border-bottom-color:var(--accent);}
+.brand span{color:#38bdf8;}
+.badge-role{background:rgba(59,130,246,.25);color:#bfdbfe;padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:600;}
+nav{background:var(--primary);border-bottom:1px solid rgba(255,255,255,0.1);padding:0 24px;display:flex;gap:4px;}
+nav a{padding:12px 16px;font-size:.85rem;font-weight:600;color:rgba(255,255,255,0.7);text-decoration:none;border-bottom:2px solid transparent;transition:all .2s;}
+nav a:hover{color:#fff;background:rgba(255,255,255,0.1);}
+nav a.active{color:#fff;border-bottom-color:#38bdf8;}
 .container{max-width:1200px;margin:24px auto;padding:0 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;}
 .card h3{font-family:'Space Grotesk',sans-serif;font-size:1rem;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
@@ -67,7 +68,7 @@ td{padding:10px 12px;font-size:.84rem;border-bottom:1px solid #f1f5f9;}
   </div>
   <div style="display:flex;align-items:center;gap:12px;">
     <span class="badge-role">🛠️ <?= htmlspecialchars($_SESSION['user']) ?></span>
-    <a href="logout.php" style="color:#6ee7b7;font-size:.8rem;text-decoration:underline;">Logout</a>
+    <a href="logout.php" style="color:#bfdbfe;font-size:.8rem;text-decoration:underline;">Logout</a>
   </div>
 </header>
 <nav>
@@ -153,7 +154,6 @@ function fetchStatus(){
     document.getElementById('levelPct').textContent = lvl + '%';
     document.getElementById('barFill').style.width = lvl + '%';
     document.getElementById('barFill').style.background = levelColor(lvl);
-    // health
     const bat = parseInt(s.battery);
     const batEl = document.getElementById('hBattery');
     batEl.textContent = bat + '%';
@@ -167,7 +167,6 @@ function fetchStatus(){
     document.getElementById('valveBtn').textContent = s.valve_state === 'OPEN'
       ? '🔒 Close Valve (Currently: OPEN)'
       : '🔓 Open Valve (Currently: CLOSED)';
-    // chart
     const now = new Date().toLocaleTimeString();
     if (labels.length > 20) { labels.shift(); data.shift(); }
     labels.push(now); data.push(lvl);
@@ -182,12 +181,7 @@ function fetchLogs(){
   .then(r => r.json()).then(d => {
     if (!d.success) return;
     document.getElementById('logBody').innerHTML = d.logs.length
-      ? d.logs.map(l => `<tr>
-          <td>${l.id}</td>
-          <td><span class="badge badge-${l.status.toLowerCase()}">${l.status}</span></td>
-          <td><span class="badge badge-${l.source === 'ESP32' ? 'esp' : 'web'}">${l.source}</span></td>
-          <td>${new Date(l.created_at).toLocaleString()}</td>
-        </tr>`).join('')
+      ? d.logs.map(l => `<tr><td>${l.id}</td><td><span class="badge badge-${l.status.toLowerCase()}">${l.status}</span></td><td><span class="badge badge-${l.source === 'ESP32' ? 'esp' : 'web'}">${l.source}</span></td><td>${new Date(l.created_at).toLocaleString()}</td></tr>`).join('')
       : '<tr><td colspan="4" style="text-align:center;color:var(--muted);">No logs yet.</td></tr>';
   });
 }

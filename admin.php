@@ -11,16 +11,17 @@ requireRole('admin');
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#faf5ff;--surface:#fff;--border:#e9d5ff;--text:#0f172a;--muted:#64748b;--accent:#8b5cf6;--danger:#ef4444;--success:#22c55e;--warn:#f59e0b;--primary:#3b0764;}
+:root{--bg:#faf5ff;--surface:#fff;--border:#e9d5ff;--text:#0f172a;--muted:#64748b;--accent:#8b5cf6;--danger:#ef4444;--success:#22c55e;--warn:#f59e0b;--primary:#1e3a5f;}
 body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);}
 header{background:var(--primary);color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;}
 .brand{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:10px;}
 .brand img{height:32px;width:auto;}
-.brand span{color:#c4b5fd;}
-.badge-role{background:rgba(139,92,246,.3);color:#ddd6fe;padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:600;}
-nav{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;gap:4px;}
-nav a{padding:12px 16px;font-size:.85rem;font-weight:600;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;cursor:pointer;}
-nav a.active{color:var(--accent);border-bottom-color:var(--accent);}
+.brand span{color:#38bdf8;}
+.badge-role{background:rgba(59,130,246,.3);color:#bfdbfe;padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:600;}
+nav{background:var(--primary);border-bottom:1px solid rgba(255,255,255,0.1);padding:0 24px;display:flex;gap:4px;}
+nav a{padding:12px 16px;font-size:.85rem;font-weight:600;color:rgba(255,255,255,0.7);text-decoration:none;border-bottom:2px solid transparent;transition:all .2s;cursor:pointer;}
+nav a:hover{color:#fff;background:rgba(255,255,255,0.1);}
+nav a.active{color:#fff;border-bottom-color:#38bdf8;}
 .tab-content{display:none;}
 .tab-content.active{display:block;}
 .container{max-width:1200px;margin:24px auto;padding:0 20px;}
@@ -54,7 +55,7 @@ input:focus,select:focus{border-color:var(--accent);}
 .hok{color:var(--success)} .hwarn{color:var(--warn)} .hbad{color:var(--danger)}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;}
 .dot-ok{background:var(--success)} .dot-bad{background:var(--danger)}
-.toast{position:fixed;bottom:24px;right:24px;background:#3b0764;color:#fff;padding:12px 20px;border-radius:10px;font-size:.85rem;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;z-index:99;}
+.toast{position:fixed;bottom:24px;right:24px;background:#1e3a5f;color:#fff;padding:12px 20px;border-radius:10px;font-size:.85rem;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;z-index:99;}
 .toast.show{opacity:1;transform:translateY(0);}
 @media(max-width:600px){.form-row{grid-template-columns:1fr;}}
 </style>
@@ -67,7 +68,7 @@ input:focus,select:focus{border-color:var(--accent);}
   </div>
   <div style="display:flex;align-items:center;gap:12px;">
     <span class="badge-role">🔐 <?= htmlspecialchars($_SESSION['user']) ?></span>
-    <a href="logout.php" style="color:#c4b5fd;font-size:.8rem;text-decoration:underline;">Logout</a>
+    <a href="logout.php" style="color:#bfdbfe;font-size:.8rem;text-decoration:underline;">Logout</a>
   </div>
 </header>
 <nav>
@@ -124,10 +125,10 @@ input:focus,select:focus{border-color:var(--accent);}
   </div>
   <div class="card">
     <h3>👥 All Users</h3>
-     <table>
-      <thead><tr><th>#</th><th>Username</th><th>Role</th><th>Created</th><th>Action</th></tr></thead>
-      <tbody id="userBody"><tr><td colspan="5" style="text-align:center;color:var(--muted);">Loading…</td></tr></tbody>
-    </table>
+      <table>
+        <thead> <tr><th>#</th><th>Username</th><th>Role</th><th>Created</th><th>Action</th></tr> </thead>
+        <tbody id="userBody"> <tr><td colspan="5" style="text-align:center;color:var(--muted);">Loading…</td></tr> </tbody>
+      </table>
   </div>
 </div>
 </div>
@@ -137,10 +138,10 @@ input:focus,select:focus{border-color:var(--accent);}
 <div class="container">
   <div class="card">
     <h3>📋 All Leak Logs</h3>
-    <table>
-      <thead><tr><th>#</th><th>Status</th><th>Source</th><th>Time</th></tr></thead>
-      <tbody id="logBody"><tr><td colspan="4" style="text-align:center;color:var(--muted);">Loading…</td></tr></tbody>
-    </table>
+      <table>
+        <thead> <tr><th>#</th><th>Status</th><th>Source</th><th>Time</th></tr> </thead>
+        <tbody id="logBody"> <tr><td colspan="4" style="text-align:center;color:var(--muted);">Loading…</td></tr> </tbody>
+      </table>
   </div>
 </div>
 </div>
@@ -150,10 +151,10 @@ input:focus,select:focus{border-color:var(--accent);}
 <div class="container">
   <div class="card">
     <h3>🔔 System Alerts</h3>
-    <table>
-      <thead><tr><th>#</th><th>Type</th><th>Message</th><th>Time</th></tr></thead>
-      <tbody id="alertBody"><tr><td colspan="4" style="text-align:center;color:var(--muted);">Loading…</td></tr></tbody>
-    </table>
+      <table>
+        <thead> <tr><th>#</th><th>Type</th><th>Message</th><th>Time</th></tr> </thead>
+        <tbody id="alertBody"> <tr><td colspan="4" style="text-align:center;color:var(--muted);">Loading…</td></tr> </tbody>
+      </table>
   </div>
 </div>
 </div>
