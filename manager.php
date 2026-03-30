@@ -15,7 +15,8 @@ requireRole('manager');
 :root{--bg:#f0fdf4;--surface:#fff;--border:#d1fae5;--text:#0f172a;--muted:#64748b;--accent:#10b981;--danger:#ef4444;--success:#22c55e;--warn:#f59e0b;--primary:#064e3b;}
 body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);}
 header{background:var(--primary);color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;}
-.brand{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:700;}
+.brand{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:10px;}
+.brand img{height:32px;width:auto;}
 .brand span{color:#6ee7b7;}
 .badge-role{background:rgba(16,185,129,.25);color:#a7f3d0;padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:600;}
 nav{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;display:flex;gap:4px;}
@@ -60,7 +61,10 @@ td{padding:10px 12px;font-size:.84rem;border-bottom:1px solid #f1f5f9;}
 </head>
 <body>
 <header>
-  <div class="brand">💧 Water<span>Guard</span> <span style="font-size:.75rem;opacity:.6;margin-left:4px;">Manager</span></div>
+  <div class="brand">
+    <img src="WaterleakLG.png" alt="WaterGuard Logo">
+    Water<span>Guard</span> <span style="font-size:.75rem;opacity:.6;margin-left:4px;">Manager</span>
+  </div>
   <div style="display:flex;align-items:center;gap:12px;">
     <span class="badge-role">🛠️ <?= htmlspecialchars($_SESSION['user']) ?></span>
     <a href="logout.php" style="color:#6ee7b7;font-size:.8rem;text-decoration:underline;">Logout</a>
@@ -108,10 +112,10 @@ td{padding:10px 12px;font-size:.84rem;border-bottom:1px solid #f1f5f9;}
 
   <div class="card full">
     <h3>📜 Recent Logs <span style="font-size:.75rem;font-weight:400;color:var(--muted)">(Last 50 entries)</span></h3>
-    <table>
-      <thead><tr><th>#</th><th>Status</th><th>Source</th><th>Time</th></tr></thead>
-      <tbody id="logBody"><tr><td colspan="4" style="text-align:center;color:var(--muted);">Loading…</td></tr></tbody>
-    </table>
+     <table>
+      <thead> <tr><th>#</th><th>Status</th><th>Source</th><th>Time</th></tr> </thead>
+      <tbody id="logBody"> <tr><td colspan="4" style="text-align:center;color:var(--muted);">Loading…</td></tr> </tbody>
+     </table>
   </div>
 </div>
 <div class="toast" id="toast"></div>
