@@ -1,0 +1,24 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Database credentials
+config/db.php
+*.config.php
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
+error_log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Composer
+vendor/
+composer.lock
