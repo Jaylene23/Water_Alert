@@ -10,29 +10,107 @@ if (isLoggedIn()) {
 $error         = '';
 $selected_role = $_POST['role'] ?? 'user';
 
+// Function to get device info
+function getDeviceInfo() {
+    $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+    
+    // Detect device type
+    if (preg_match('/Mobile|Android|iPhone|iPad|iPod/i', $user_agent)) {
+        $device_type = 'Mobile';
+    } elseif (preg_match('/Tablet|iPad/i', $user_agent)) {
+        $device_type = 'Tablet';
+    } else {
+        $device_type = 'Desktop';
+    }
+    
+    // Detect browser
+    if (strpos($user_agent, 'Chrome') !== false && strpos($user_agent, 'Edg') === false) {
+        $browser = 'Chrome';
+    } elseif (strpos($user_agent, 'Firefox') !== false) {
+        $browser = 'Firefox';
+    } elseif (strpos($user_agent, 'Safari') !== false && strpos($user_agent, 'Chrome') === false) {
+        $browser = 'Safari';
+    } elseif (strpos($user_agent, 'Edg') !== false) {
+        $browser = 'Edge';
+    } else {
+        $browser = 'Unknown';
+    }
+    
+    // Detect OS
+    if (strpos($user_agent, 'Windows') !== false) {
+        $os = 'Windows';
+    } elseif (strpos($user_agent, 'Mac') !== false) {
+        $os = 'Mac';
+    } elseif (strpos($user_agent, 'Linux') !== false) {
+        $os = 'Linux';
+    } elseif (strpos($user_agent, 'Android') !== false) {
+        $os = 'Android';
+    } elseif (strpos($user_agent, 'iPhone') !== false || strpos($user_agent, 'iPad') !== false) {
+        $os = 'iOS';
+    } else {
+        $os = 'Unknown';
+    }
+    
+    return [
+        'user_agent' => $user_agent,
+        'device_type' => $device_type,
+        'browser' => $browser,
+        'os' => $os,
+        'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'
+    ];
+}
+
+// Function to log user actions
+function logUserAction($conn, $user_id, $action, $details = null) {
+    $device_info = getDeviceInfo();
+    
+    $stmt = $conn->prepare("INSERT INTO user_logs (user_id, action, ip_address, user_agent, device_type, browser, os, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("isssssss", $user_id, $action, $device_info['ip_address'], $device_info['user_agent'], $device_info['device_type'], $device_info['browser'], $device_info['os'], $details);
+    return $stmt->execute();
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $uname = trim($_POST['username'] ?? '');
     $pass  = trim($_POST['password'] ?? '');
     $role  = trim($_POST['role'] ?? '');
-
+    
+    // Check if user_id column exists (handle both 'id' and 'user_id')
     $stmt = $conn->prepare("SELECT * FROM users WHERE username = ? AND role = ?");
     $stmt->bind_param("ss", $uname, $role);
     $stmt->execute();
     $user = $stmt->get_result()->fetch_assoc();
-
+    
     if ($user) {
+        // Check which ID column exists
+        $user_id_field = isset($user['user_id']) ? 'user_id' : 'id';
+        $user_id = $user[$user_id_field];
+        
         if ($pass === $user['password']) {
+            // SUCCESSFUL LOGIN - Log it
             $_SESSION['user'] = $user['username'];
             $_SESSION['role'] = $user['role'];
-            $_SESSION['uid']  = $user['id'];
+            $_SESSION['uid']  = $user_id;
+            
+            // Log successful login
+            logUserAction($conn, $user_id, 'login', "Successful login from {$device_info['device_type']} using {$device_info['browser']} on {$device_info['os']}");
+            
             $dest = ['admin' => 'admin.php', 'manager' => 'manager.php', 'user' => 'index.php'];
             header("Location: " . ($dest[$user['role']] ?? 'index.php'));
             exit;
         } else {
+            // FAILED LOGIN - Wrong password
             $error = "Incorrect password.";
+            // Log failed login attempt
+            logUserAction($conn, $user_id, 'failed_login', "Incorrect password for username: {$uname}");
         }
     } else {
+        // FAILED LOGIN - User not found
         $error = "No account found for that username and role.";
+        // Log failed login attempt (user_id = NULL since user doesn't exist)
+        $device_info = getDeviceInfo();
+        $stmt = $conn->prepare("INSERT INTO user_logs (user_id, action, ip_address, user_agent, device_type, browser, os, details) VALUES (NULL, 'failed_login', ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssss", $device_info['ip_address'], $device_info['user_agent'], $device_info['device_type'], $device_info['browser'], $device_info['os'], "No account found for username: {$uname} with role: {$role}");
+        $stmt->execute();
     }
 }
 
