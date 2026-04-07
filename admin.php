@@ -24,7 +24,7 @@ nav a:hover{color:#fff;background:rgba(255,255,255,0.1);}
 nav a.active{color:#fff;border-bottom-color:#38bdf8;}
 .tab-content{display:none;}
 .tab-content.active{display:block;}
-.container{max-width:1200px;margin:24px auto;padding:0 20px;}
+.container{max-width:1400px;margin:24px auto;padding:0 20px;}
 .grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:20px;}
 .grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;}
@@ -41,6 +41,11 @@ td{padding:10px 12px;font-size:.84rem;border-bottom:1px solid #f5f3ff;}
 .badge-admin{background:#ede9fe;color:#5b21b6;}
 .badge-safe{background:#dcfce7;color:#15803d;}
 .badge-leak{background:#fee2e2;color:#dc2626;}
+.badge-login{background:#dbeafe;color:#1d4ed8;}
+.badge-failed_login{background:#fee2e2;color:#dc2626;}
+.badge-create_user{background:#d1fae5;color:#065f46;}
+.badge-delete_user{background:#fee2e2;color:#dc2626;}
+.badge-update_tank{background:#fef3c7;color:#92400e;}
 .form-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end;}
 label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:5px;}
 input[type=text],input[type=password],select{width:100%;background:#faf5ff;border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:8px;font-size:.88rem;outline:none;font-family:inherit;}
@@ -57,6 +62,12 @@ input:focus,select:focus{border-color:var(--accent);}
 .dot-ok{background:var(--success)} .dot-bad{background:var(--danger)}
 .toast{position:fixed;bottom:24px;right:24px;background:#1e3a5f;color:#fff;padding:12px 20px;border-radius:10px;font-size:.85rem;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;z-index:99;}
 .toast.show{opacity:1;transform:translateY(0);}
+.filter-row{display:flex;gap:10px;margin-bottom:15px;align-items:center;flex-wrap:wrap;}
+.filter-row input,.filter-row select{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;}
+.filter-row .btn{padding:8px 16px;}
+.pagination{display:flex;justify-content:center;gap:8px;margin-top:20px;}
+.pagination button{padding:6px 12px;border:1px solid var(--border);background:white;border-radius:6px;cursor:pointer;}
+.pagination button:hover{background:var(--accent);color:white;}
 @media(max-width:600px){.form-row{grid-template-columns:1fr;}}
 </style>
 </head>
@@ -74,7 +85,8 @@ input:focus,select:focus{border-color:var(--accent);}
 <nav>
   <a class="active" onclick="switchTab('overview',this)">Overview</a>
   <a onclick="switchTab('users',this)">User Management</a>
-  <a onclick="switchTab('logs',this)">Audit Logs</a>
+  <a onclick="switchTab('userlogs',this)">👁️ User Logs</a>
+  <a onclick="switchTab('logs',this)">Leak Logs</a>
   <a onclick="switchTab('alerts',this)">Alerts</a>
 </nav>
 
@@ -83,7 +95,7 @@ input:focus,select:focus{border-color:var(--accent);}
 <div class="container">
   <div class="grid-4">
     <div class="stat-tile"><div class="stat-num" id="s-users">–</div><div class="stat-label">Total Users</div></div>
-    <div class="stat-tile"><div class="stat-num" id="s-logs">–</div><div class="stat-label">Total Logs</div></div>
+    <div class="stat-tile"><div class="stat-num" id="s-userlogs">–</div><div class="stat-label">User Actions</div></div>
     <div class="stat-tile"><div class="stat-num" id="s-leaks" style="color:#ef4444">–</div><div class="stat-label">Leak Events</div></div>
     <div class="stat-tile"><div class="stat-num" id="s-alerts" style="color:#f59e0b">–</div><div class="stat-label">Alerts Sent</div></div>
   </div>
@@ -126,21 +138,53 @@ input:focus,select:focus{border-color:var(--accent);}
   <div class="card">
     <h3>👥 All Users</h3>
       <table>
-        <thead> <tr><th>#</th><th>Username</th><th>Role</th><th>Created</th><th>Action</th></tr> </thead>
-        <tbody id="userBody"> <tr><td colspan="5" style="text-align:center;color:var(--muted);">Loading…</td></tr> </tbody>
+        <thead> <tr><th>#</th><th>Username</th><th>Role</th><th>Created</th><th>Action</th> </thead>
+        <tbody id="userBody"> <tr><td colspan="5" style="text-align:center;color:var(--muted);">Loading…</td> </tbody>
       </table>
   </div>
 </div>
 </div>
 
-<!-- AUDIT LOGS -->
+<!-- USER LOGS (NEW) -->
+<div id="tab-userlogs" class="tab-content">
+<div class="container">
+  <div class="card">
+    <h3>👁️ User Activity Logs</h3>
+    <div class="filter-row">
+      <input type="text" id="filter-username" placeholder="Filter by username" style="flex:1;">
+      <select id="filter-action">
+        <option value="">All Actions</option>
+        <option value="login">Login</option>
+        <option value="failed_login">Failed Login</option>
+        <option value="create_user">Create User</option>
+        <option value="delete_user">Delete User</option>
+        <option value="update_tank">Update Tank</option>
+      </select>
+      <input type="date" id="filter-date" style="width:150px;">
+      <button class="btn btn-primary" onclick="loadUserLogs()">Filter</button>
+      <button class="btn" onclick="resetFilters()">Reset</button>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr><th>#</th><th>User</th><th>Action</th><th>IP Address</th><th>Device</th><th>Browser</th><th>OS</th><th>Details</th><th>Time</th> </thead>
+        <tbody id="userLogBody">
+          <tr><td colspan="9" style="text-align:center;color:var(--muted);">Loading…</td> </tbody>
+      </table>
+    </div>
+    <div id="log-pagination" class="pagination"></div>
+  </div>
+</div>
+</div>
+
+<!-- LEAK LOGS -->
 <div id="tab-logs" class="tab-content">
 <div class="container">
   <div class="card">
     <h3>📋 All Leak Logs</h3>
       <table>
-        <thead> <tr><th>#</th><th>Status</th><th>Source</th><th>Time</th></tr> </thead>
-        <tbody id="logBody"> <tr><td colspan="4" style="text-align:center;color:var(--muted);">Loading…</td></tr> </tbody>
+        <thead> <tr><th>#</th><th>Status</th><th>Source</th><th>Time</th> </thead>
+        <tbody id="logBody"> <tr><td colspan="4" style="text-align:center;color:var(--muted);">Loading…</td> </tbody>
       </table>
   </div>
 </div>
@@ -152,8 +196,8 @@ input:focus,select:focus{border-color:var(--accent);}
   <div class="card">
     <h3>🔔 System Alerts</h3>
       <table>
-        <thead> <tr><th>#</th><th>Type</th><th>Message</th><th>Time</th></tr> </thead>
-        <tbody id="alertBody"> <tr><td colspan="4" style="text-align:center;color:var(--muted);">Loading…</td></tr> </tbody>
+        <thead> <tr><th>#</th><th>Type</th><th>Message</th><th>Time</th> </thead>
+        <tbody id="alertBody"> <tr><td colspan="4" style="text-align:center;color:var(--muted);">Loading…</td> </tbody>
       </table>
   </div>
 </div>
@@ -162,6 +206,8 @@ input:focus,select:focus{border-color:var(--accent);}
 <div class="toast" id="toast"></div>
 
 <script>
+let currentLogPage = 1;
+
 function toast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
@@ -174,6 +220,7 @@ function switchTab(name, el){
   document.getElementById('tab-' + name).classList.add('active');
   el.classList.add('active');
   if (name === 'users') loadUsers();
+  if (name === 'userlogs') loadUserLogs();
   if (name === 'logs') loadLogs();
   if (name === 'alerts') loadAlerts();
 }
@@ -184,7 +231,7 @@ function loadStats(){
   post('action=get_stats').then(d => {
     if (!d.success) return;
     document.getElementById('s-users').textContent  = d.stats.total_users;
-    document.getElementById('s-logs').textContent   = d.stats.total_logs;
+    document.getElementById('s-userlogs').textContent = d.stats.total_user_logs || 0;
     document.getElementById('s-leaks').textContent  = d.stats.total_leaks;
     document.getElementById('s-alerts').textContent = d.stats.total_alerts;
   });
@@ -235,11 +282,11 @@ function loadUsers(){
     if (!d.success) return;
     document.getElementById('userBody').innerHTML = d.users.length
       ? d.users.map(u => `<tr>
-          <td>${u.id}</td>
+          <td>${u.user_id || u.id}</td>
           <td><strong>${u.username}</strong></td>
           <td><span class="badge badge-${u.role}">${u.role}</span></td>
           <td style="font-size:.8rem;color:var(--muted)">${new Date(u.created_at).toLocaleString()}</td>
-          <td><button class="btn btn-danger" onclick="deleteUser(${u.id},'${u.username}')">Delete</button></td>
+          <td><button class="btn btn-danger" onclick="deleteUser(${u.user_id || u.id},'${u.username}')">Delete</button></td>
         </tr>`).join('')
       : '<tr><td colspan="5" style="text-align:center;color:var(--muted);">No users found.</td></tr>';
   });
@@ -267,6 +314,58 @@ function deleteUser(id, name){
     if (d.success) { toast('🗑️ User deleted'); loadUsers(); loadRoleBreakdown(); loadStats(); }
     else toast('❌ ' + (d.error || 'Error'));
   });
+}
+
+function loadUserLogs(page = 1){
+  currentLogPage = page;
+  const username = document.getElementById('filter-username')?.value || '';
+  const action = document.getElementById('filter-action')?.value || '';
+  const date = document.getElementById('filter-date')?.value || '';
+  
+  post(`action=get_user_logs&page=${page}&username=${encodeURIComponent(username)}&action=${encodeURIComponent(action)}&date=${date}`).then(d => {
+    if (!d.success) return;
+    
+    document.getElementById('userLogBody').innerHTML = d.logs.length
+      ? d.logs.map(l => {
+          let badgeClass = '';
+          if (l.action === 'login') badgeClass = 'badge-login';
+          else if (l.action === 'failed_login') badgeClass = 'badge-failed_login';
+          else if (l.action === 'create_user') badgeClass = 'badge-create_user';
+          else if (l.action === 'delete_user') badgeClass = 'badge-delete_user';
+          else badgeClass = 'badge-update_tank';
+          
+          return `<tr>
+            <td>${l.log_id}</td>
+            <td><strong>${l.username || 'Unknown'}</strong></td>
+            <td><span class="badge ${badgeClass}">${l.action.replace('_', ' ')}</span></td>
+            <td><code style="font-size:.75rem;">${l.ip_address}</code></td>
+            <td><span class="badge">${l.device_type || 'Unknown'}</span></td>
+            <td>${l.browser || 'Unknown'}</td>
+            <td>${l.os || 'Unknown'}</td>
+            <td style="font-size:.78rem;color:var(--muted);">${l.details || '-'}</td>
+            <td style="font-size:.78rem;">${new Date(l.created_at).toLocaleString()}</td>
+          </tr>`;
+        }).join('')
+      : '<tr><td colspan="9" style="text-align:center;color:var(--muted);">No user logs found.</td></tr>';
+    
+    // Pagination
+    if (d.total_pages > 1) {
+      let paginationHtml = '';
+      for (let i = 1; i <= d.total_pages; i++) {
+        paginationHtml += `<button onclick="loadUserLogs(${i})" style="${i === currentLogPage ? 'background:var(--accent);color:white;' : ''}">${i}</button>`;
+      }
+      document.getElementById('log-pagination').innerHTML = paginationHtml;
+    } else {
+      document.getElementById('log-pagination').innerHTML = '';
+    }
+  });
+}
+
+function resetFilters(){
+  document.getElementById('filter-username').value = '';
+  document.getElementById('filter-action').value = '';
+  document.getElementById('filter-date').value = '';
+  loadUserLogs(1);
 }
 
 function loadLogs(){
