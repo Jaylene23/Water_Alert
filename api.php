@@ -84,6 +84,31 @@ switch($action) {
         sendResponse(true, ['alerts' => $alerts]);
         break;
         
+    case 'simulate_leak':
+        if (!function_exists('isManager') || !isManager()) {
+            sendResponse(false, [], 'Forbidden - Manager access required');
+        }
+        $status = ($_POST['status'] ?? 'SAFE') === 'LEAK' ? 'LEAK' : 'SAFE';
+        $level = ($status === 'LEAK') ? 10 : 75;
+        $conn->query("INSERT INTO leak_logs (status, source) VALUES ('$status', 'WEB_SIMULATION')");
+        $conn->query("UPDATE tank_status SET water_level='$level', status='$status', last_updated=NOW() WHERE tank_id = 1");
+        if ($status === 'LEAK') {
+            $msg = "Simulated Leak! Water level at {$level}%";
+            $conn->query("INSERT INTO alerts (alert_type, message) VALUES ('LEAK', '$msg')");
+        }
+        sendResponse(true);
+        break;
+        
+    case 'toggle_valve':
+        if (!function_exists('isManager') || !isManager()) {
+            sendResponse(false, [], 'Forbidden - Manager access required');
+        }
+        $current = $_POST['current'] ?? 'OPEN';
+        $new = ($current === 'OPEN') ? 'CLOSED' : 'OPEN';
+        $conn->query("UPDATE tank_status SET valve_state='$new', last_updated=NOW() WHERE tank_id = 1");
+        sendResponse(true, ['new' => $new]);
+        break;
+        
     case 'get_users':
         if (!function_exists('isAdmin') || !isAdmin()) {
             sendResponse(false, [], 'Forbidden - Admin access required');
@@ -95,7 +120,7 @@ switch($action) {
             sendResponse(false, [], 'Users table does not exist');
         }
         
-        // Use user_id instead of id
+        // Use user_id column
         $result = $conn->query("SELECT user_id, username, role, created_at FROM users ORDER BY user_id ASC");
         if (!$result) {
             sendResponse(false, [], 'Query failed: ' . $conn->error);
@@ -141,7 +166,7 @@ switch($action) {
         }
         $check->close();
         
-        // Insert user with plain text password (as per your config)
+        // Insert user with plain text password
         $stmt = $conn->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, ?)");
         $stmt->bind_param("sss", $uname, $pass, $role);
         if ($stmt->execute()) {
@@ -170,6 +195,7 @@ switch($action) {
                 $result = $conn->query("SELECT user_id FROM users WHERE username = '" . $conn->real_escape_string($username) . "'");
                 if ($result && $row = $result->fetch_assoc()) {
                     $currentUserId = $row['user_id'];
+                    $_SESSION['user_id'] = $currentUserId; // Store for future use
                 }
             }
         }

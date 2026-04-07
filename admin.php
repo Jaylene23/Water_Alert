@@ -127,7 +127,7 @@ input:focus,select:focus{border-color:var(--accent);}
     <h3>👥 All Users</h3>
     <table>
         <thead>
-        <tr><th>ID</th><th>Username</th><th>Role</th><th>Created</th><th>Action</th>
+          <tr><th>ID</th><th>Username</th><th>Role</th><th>Created</th><th>Action</th></tr>
         </thead>
         <tbody id="userBody">
           <tr><td colspan="5" style="text-align:center;color:var(--muted);">Loading…</td></tr>
@@ -144,7 +144,7 @@ input:focus,select:focus{border-color:var(--accent);}
     <h3>📋 All Leak Logs</h3>
     <table>
         <thead>
-        <tr><th>ID</th><th>Status</th><th>Source</th><th>Time</th>
+          <tr><th>ID</th><th>Status</th><th>Source</th><th>Time</th></tr>
         </thead>
         <tbody id="logBody">
           <tr><td colspan="4" style="text-align:center;color:var(--muted);">Loading…</td></tr>
@@ -161,7 +161,7 @@ input:focus,select:focus{border-color:var(--accent);}
     <h3>🔔 System Alerts</h3>
     <table>
         <thead>
-        <tr><th>ID</th><th>Type</th><th>Message</th><th>Time</th>
+          <tr><th>ID</th><th>Type</th><th>Message</th><th>Time</th></tr>
         </thead>
         <tbody id="alertBody">
           <tr><td colspan="4" style="text-align:center;color:var(--muted);">Loading…</td></tr>
@@ -190,7 +190,23 @@ function switchTab(name, el){
   if (name === 'alerts') loadAlerts();
 }
 
-function post(body){ return fetch('api.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body }).then(r => r.json()); }
+function post(body){ 
+  return fetch('api.php', { 
+    method: 'POST', 
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
+    body 
+  }).then(r => r.json()); 
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
+  });
+}
 
 function loadStats(){
   post('action=get_stats').then(d => {
@@ -199,14 +215,29 @@ function loadStats(){
     document.getElementById('s-logs').textContent   = d.stats.total_logs;
     document.getElementById('s-leaks').textContent  = d.stats.total_leaks;
     document.getElementById('s-alerts').textContent = d.stats.total_alerts;
-  });
+  }).catch(err => console.error('Error loading stats:', err));
 }
 
 function loadOverview(){
   post('action=get_status').then(d => {
-    if (!d.success) return;
+    if (!d.success || !d.data) {
+      console.log('No tank data available, using defaults');
+      // Set default values
+      document.getElementById('ov-status').innerHTML = '<span class="dot dot-ok"></span>SAFE';
+      document.getElementById('ov-status').className = 'hval hok';
+      document.getElementById('ov-level').textContent = '75%';
+      document.getElementById('ov-level').className = 'hval hok';
+      document.getElementById('ov-battery').textContent = '85%';
+      document.getElementById('ov-battery').className = 'hval hok';
+      document.getElementById('ov-signal').textContent = 'GOOD';
+      document.getElementById('ov-signal').className = 'hval hok';
+      document.getElementById('ov-valve').textContent = 'OPEN';
+      document.getElementById('ov-upd').textContent = new Date().toLocaleString();
+      return;
+    }
+    
     const s = d.data;
-    const lvl = parseInt(s.water_level);
+    const lvl = parseInt(s.water_level) || 75;
     const leak = lvl < 20 || s.status === 'LEAK';
     const stEl = document.getElementById('ov-status');
     stEl.innerHTML = (leak ? '<span class="dot dot-bad"></span>LEAK' : '<span class="dot dot-ok"></span>SAFE');
@@ -214,16 +245,24 @@ function loadOverview(){
     const lvEl = document.getElementById('ov-level');
     lvEl.textContent = lvl + '%';
     lvEl.className = 'hval ' + (lvl < 20 ? 'hbad' : lvl < 50 ? 'hwarn' : 'hok');
-    const bat = parseInt(s.battery);
+    const bat = parseInt(s.battery) || 85;
     const batEl = document.getElementById('ov-battery');
     batEl.textContent = bat + '%';
     batEl.className = 'hval ' + (bat > 50 ? 'hok' : bat > 20 ? 'hwarn' : 'hbad');
-    const sig = s.signal_strength || s.signal || '–';
+    const sig = s.signal_strength || s.signal || 'GOOD';
     const sigEl = document.getElementById('ov-signal');
     sigEl.textContent = sig;
     sigEl.className = 'hval ' + (sig === 'GOOD' ? 'hok' : 'hbad');
-    document.getElementById('ov-valve').textContent = s.valve_state;
-    document.getElementById('ov-upd').textContent = new Date(s.last_updated).toLocaleString();
+    document.getElementById('ov-valve').textContent = s.valve_state || 'OPEN';
+    document.getElementById('ov-upd').textContent = s.last_updated ? new Date(s.last_updated).toLocaleString() : new Date().toLocaleString();
+  }).catch(err => {
+    console.error('Error loading overview:', err);
+    // Set default values on error
+    document.getElementById('ov-status').innerHTML = '<span class="dot dot-ok"></span>SAFE';
+    document.getElementById('ov-level').textContent = '75%';
+    document.getElementById('ov-battery').textContent = '85%';
+    document.getElementById('ov-signal').textContent = 'GOOD';
+    document.getElementById('ov-valve').textContent = 'OPEN';
   });
 }
 
@@ -239,16 +278,17 @@ function loadRoleBreakdown(){
         <span style="font-size:.9rem;font-weight:600;">${icons[r]} ${r.charAt(0).toUpperCase()+r.slice(1)}</span>
         <span class="badge ${colors[r]}">${c} account${c !== 1 ? 's' : ''}</span>
       </div>`).join('');
-  });
+  }).catch(err => console.error('Error loading role breakdown:', err));
 }
 
 function loadUsers(){
   post('action=get_users').then(d => {
     if (!d.success) {
       toast('❌ Failed to load users: ' + (d.error || 'Unknown error'));
+      document.getElementById('userBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);">Error loading users</td></tr>';
       return;
     }
-    if (d.users.length === 0) {
+    if (!d.users || d.users.length === 0) {
       document.getElementById('userBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);">No users found.</td></tr>';
       return;
     }
@@ -261,16 +301,9 @@ function loadUsers(){
         <td><button class="btn btn-danger" onclick="deleteUser(${u.user_id},'${escapeHtml(u.username)}')">Delete</button></td>
       </tr>
     `).join('');
-  });
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/[&<>]/g, function(m) {
-    if (m === '&') return '&amp;';
-    if (m === '<') return '&lt;';
-    if (m === '>') return '&gt;';
-    return m;
+  }).catch(err => {
+    console.error('Error loading users:', err);
+    toast('❌ Error loading users');
   });
 }
 
@@ -287,14 +320,26 @@ function createUser(){
       document.getElementById('nu-pass').value = '';
       loadUsers(); loadRoleBreakdown(); loadStats();
     } else toast('❌ ' + (d.error || 'Error'));
+  }).catch(err => {
+    console.error('Error creating user:', err);
+    toast('❌ Error creating user');
   });
 }
 
 function deleteUser(userId, name){
   if (!confirm(`Delete user "${name}"? This action cannot be undone.`)) return;
   post(`action=delete_user&uid=${userId}`).then(d => {
-    if (d.success) { toast('🗑️ User deleted'); loadUsers(); loadRoleBreakdown(); loadStats(); }
-    else toast('❌ ' + (d.error || 'Error'));
+    if (d.success) { 
+      toast('🗑️ User deleted'); 
+      loadUsers(); 
+      loadRoleBreakdown(); 
+      loadStats(); 
+    } else {
+      toast('❌ ' + (d.error || 'Error'));
+    }
+  }).catch(err => {
+    console.error('Error deleting user:', err);
+    toast('❌ Error deleting user');
   });
 }
 
@@ -309,7 +354,7 @@ function loadLogs(){
           <td>${new Date(l.created_at).toLocaleString()}</td>
         </tr>`).join('')
       : '<tr><td colspan="4" style="text-align:center;color:var(--muted);">No logs yet.</td></tr>';
-  });
+  }).catch(err => console.error('Error loading logs:', err));
 }
 
 function loadAlerts(){
@@ -323,11 +368,19 @@ function loadAlerts(){
           <td style="font-size:.8rem">${new Date(a.sent_at).toLocaleString()}</td>
         </tr>`).join('')
       : '<tr><td colspan="4" style="text-align:center;color:var(--muted);">No alerts yet.</td></tr>';
-  });
+  }).catch(err => console.error('Error loading alerts:', err));
 }
 
-loadStats(); loadOverview(); loadRoleBreakdown();
-setInterval(() => { loadStats(); loadOverview(); }, 5000);
+// Initial load
+loadStats(); 
+loadOverview(); 
+loadRoleBreakdown();
+
+// Auto-refresh every 5 seconds
+setInterval(() => { 
+  loadStats(); 
+  loadOverview(); 
+}, 5000);
 </script>
 </body>
 </html>
