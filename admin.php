@@ -18,13 +18,13 @@ header{background:var(--primary);color:#fff;padding:14px 24px;display:flex;justi
 .brand img{height:32px;width:auto;}
 .brand span{color:#38bdf8;}
 .badge-role{background:rgba(59,130,246,.3);color:#bfdbfe;padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:600;}
-nav{background:var(--primary);border-bottom:1px solid rgba(255,255,255,0.1);padding:0 24px;display:flex;gap:4px;}
+nav{background:var(--primary);border-bottom:1px solid rgba(255,255,255,0.1);padding:0 24px;display:flex;gap:4px;flex-wrap:wrap;}
 nav a{padding:12px 16px;font-size:.85rem;font-weight:600;color:rgba(255,255,255,0.7);text-decoration:none;border-bottom:2px solid transparent;transition:all .2s;cursor:pointer;}
 nav a:hover{color:#fff;background:rgba(255,255,255,0.1);}
 nav a.active{color:#fff;border-bottom-color:#38bdf8;}
 .tab-content{display:none;}
 .tab-content.active{display:block;}
-.container{max-width:1200px;margin:24px auto;padding:0 20px;}
+.container{max-width:1400px;margin:24px auto;padding:0 20px;}
 .grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:20px;}
 .grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;}
@@ -57,7 +57,8 @@ input:focus,select:focus{border-color:var(--accent);}
 .dot-ok{background:var(--success)} .dot-bad{background:var(--danger)}
 .toast{position:fixed;bottom:24px;right:24px;background:#1e3a5f;color:#fff;padding:12px 20px;border-radius:10px;font-size:.85rem;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;z-index:99;}
 .toast.show{opacity:1;transform:translateY(0);}
-@media(max-width:600px){.form-row{grid-template-columns:1fr;}}
+.log-details{max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+@media(max-width:600px){.form-row{grid-template-columns:1fr;}.container{overflow-x:auto;}}
 </style>
 </head>
 <body>
@@ -74,7 +75,8 @@ input:focus,select:focus{border-color:var(--accent);}
 <nav>
   <a class="active" onclick="switchTab('overview',this)">Overview</a>
   <a onclick="switchTab('users',this)">User Management</a>
-  <a onclick="switchTab('logs',this)">Audit Logs</a>
+  <a onclick="switchTab('userlogs',this)">User Logs</a>
+  <a onclick="switchTab('logs',this)">Leak Logs</a>
   <a onclick="switchTab('alerts',this)">Alerts</a>
 </nav>
 
@@ -125,31 +127,64 @@ input:focus,select:focus{border-color:var(--accent);}
   </div>
   <div class="card">
     <h3>👥 All Users</h3>
-    <table>
+    <div style="overflow-x:auto;">
+      <table>
         <thead>
           <tr><th>ID</th><th>Username</th><th>Role</th><th>Created</th><th>Action</th></tr>
         </thead>
         <tbody id="userBody">
           <tr><td colspan="5" style="text-align:center;color:var(--muted);">Loading…</td></tr>
         </tbody>
-    </table>
+      </table>
+    </div>
   </div>
 </div>
 </div>
 
-<!-- AUDIT LOGS -->
+<!-- USER LOGS -->
+<div id="tab-userlogs" class="tab-content">
+<div class="container">
+  <div class="card">
+    <h3>User Activity Logs</h3>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>User</th>
+            <th>Action</th>
+            <th>IP Address</th>
+            <th>Device</th>
+            <th>Browser</th>
+            <th>OS</th>
+            <th>Details</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody id="userLogsBody">
+          <tr><td colspan="9" style="text-align:center;color:var(--muted);">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- LEAK LOGS -->
 <div id="tab-logs" class="tab-content">
 <div class="container">
   <div class="card">
     <h3>📋 All Leak Logs</h3>
-    <table>
+    <div style="overflow-x:auto;">
+      <table>
         <thead>
           <tr><th>ID</th><th>Status</th><th>Source</th><th>Time</th></tr>
         </thead>
         <tbody id="logBody">
           <tr><td colspan="4" style="text-align:center;color:var(--muted);">Loading…</td></tr>
         </tbody>
-    </table>
+      </table>
+    </div>
   </div>
 </div>
 </div>
@@ -159,14 +194,16 @@ input:focus,select:focus{border-color:var(--accent);}
 <div class="container">
   <div class="card">
     <h3>🔔 System Alerts</h3>
-    <table>
+    <div style="overflow-x:auto;">
+      <table>
         <thead>
           <tr><th>ID</th><th>Type</th><th>Message</th><th>Time</th></tr>
         </thead>
         <tbody id="alertBody">
           <tr><td colspan="4" style="text-align:center;color:var(--muted);">Loading…</td></tr>
         </tbody>
-    </table>
+      </table>
+    </div>
   </div>
 </div>
 </div>
@@ -186,6 +223,7 @@ function switchTab(name, el){
   document.getElementById('tab-' + name).classList.add('active');
   el.classList.add('active');
   if (name === 'users') loadUsers();
+  if (name === 'userlogs') loadUserLogs();
   if (name === 'logs') loadLogs();
   if (name === 'alerts') loadAlerts();
 }
@@ -200,7 +238,7 @@ function post(body){
 
 function escapeHtml(str) {
   if (!str) return '';
-  return str.replace(/[&<>]/g, function(m) {
+  return String(str).replace(/[&<>]/g, function(m) {
     if (m === '&') return '&amp;';
     if (m === '<') return '&lt;';
     if (m === '>') return '&gt;';
@@ -211,9 +249,9 @@ function escapeHtml(str) {
 function loadStats(){
   post('action=get_stats').then(d => {
     if (!d.success) return;
-    document.getElementById('s-users').textContent  = d.stats.total_users;
-    document.getElementById('s-logs').textContent   = d.stats.total_logs;
-    document.getElementById('s-leaks').textContent  = d.stats.total_leaks;
+    document.getElementById('s-users').textContent = d.stats.total_users;
+    document.getElementById('s-logs').textContent = d.stats.total_logs;
+    document.getElementById('s-leaks').textContent = d.stats.total_leaks;
     document.getElementById('s-alerts').textContent = d.stats.total_alerts;
   }).catch(err => console.error('Error loading stats:', err));
 }
@@ -222,7 +260,6 @@ function loadOverview(){
   post('action=get_status').then(d => {
     if (!d.success || !d.data) {
       console.log('No tank data available, using defaults');
-      // Set default values
       document.getElementById('ov-status').innerHTML = '<span class="dot dot-ok"></span>SAFE';
       document.getElementById('ov-status').className = 'hval hok';
       document.getElementById('ov-level').textContent = '75%';
@@ -257,12 +294,6 @@ function loadOverview(){
     document.getElementById('ov-upd').textContent = s.last_updated ? new Date(s.last_updated).toLocaleString() : new Date().toLocaleString();
   }).catch(err => {
     console.error('Error loading overview:', err);
-    // Set default values on error
-    document.getElementById('ov-status').innerHTML = '<span class="dot dot-ok"></span>SAFE';
-    document.getElementById('ov-level').textContent = '75%';
-    document.getElementById('ov-battery').textContent = '85%';
-    document.getElementById('ov-signal').textContent = 'GOOD';
-    document.getElementById('ov-valve').textContent = 'OPEN';
   });
 }
 
@@ -271,7 +302,7 @@ function loadRoleBreakdown(){
     if (!d.success) return;
     const counts = { admin: 0, manager: 0, user: 0 };
     d.users.forEach(u => { if (counts[u.role] !== undefined) counts[u.role]++; });
-    const icons  = { admin: '🔐', manager: '🛠️', user: '👤' };
+    const icons = { admin: '🔐', manager: '🛠️', user: '👤' };
     const colors = { admin: 'badge-admin', manager: 'badge-manager', user: 'badge-user' };
     document.getElementById('roleList').innerHTML = Object.entries(counts).map(([r, c]) => `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#faf5ff;border-radius:8px;">
@@ -307,10 +338,41 @@ function loadUsers(){
   });
 }
 
+function loadUserLogs(){
+  post('action=get_user_logs').then(d => {
+    if (!d.success) {
+      document.getElementById('userLogsBody').innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);">Error loading logs: ' + escapeHtml(d.error) + '</td></tr>';
+      return;
+    }
+    
+    if (!d.logs || d.logs.length === 0) {
+      document.getElementById('userLogsBody').innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);">No user logs found</td></tr>';
+      return;
+    }
+    
+    document.getElementById('userLogsBody').innerHTML = d.logs.map(log => `
+      <tr>
+        <td>${log.log_id}</td>
+        <td><strong>${escapeHtml(log.username || 'Unknown')}</strong></td>
+        <td><span class="badge badge-manager">${escapeHtml(log.action)}</span></td>
+        <td><code style="font-size:0.7rem;">${escapeHtml(log.ip_address || '-')}</code></td>
+        <td><span class="badge badge-user">${escapeHtml(log.device_type || '-')}</span></td>
+        <td>${escapeHtml(log.browser || '-')}</td>
+        <td>${escapeHtml(log.os || '-')}</td>
+        <td class="log-details" title="${escapeHtml(log.details || '-')}">${escapeHtml(log.details || '-')}</td>
+        <td style="font-size:0.75rem;">${new Date(log.created_at).toLocaleString()}</td>
+      </tr>
+    `).join('');
+  }).catch(err => {
+    console.error('Error loading user logs:', err);
+    document.getElementById('userLogsBody').innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);">Error loading logs</td></tr>';
+  });
+}
+
 function createUser(){
   const uname = document.getElementById('nu-user').value.trim();
-  const pass  = document.getElementById('nu-pass').value.trim();
-  const role  = document.getElementById('nu-role').value;
+  const pass = document.getElementById('nu-pass').value.trim();
+  const role = document.getElementById('nu-role').value;
   if (!uname || !pass) { toast('⚠️ Fill in all fields'); return; }
   post(`action=create_user&username=${encodeURIComponent(uname)}&password=${encodeURIComponent(pass)}&new_role=${role}`)
   .then(d => {
